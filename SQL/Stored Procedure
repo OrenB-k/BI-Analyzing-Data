@@ -1,0 +1,93 @@
+--stored procedure
+
+--EXC 1
+create procedure sp_add_new_productAndCat
+@CategoryName varchar(15),
+@ProductName varchar(40),
+@UnitsInStock int = 0
+AS
+  /*Dont try to add value to Identity columns*/
+  
+  BEGIN TRY
+    BEGIN TRANSACTION
+    -- begin trans: insert cat -> add identity -> insert products -> commit;
+      insert into Categories(CategoryName) 
+          values( @CategoryName);
+        insert into Products(ProductName,unitsinstock,CategoryID ) 
+          values(@ProductName,@UnitsInStock, IDENT_CURRENT('Categories'));
+    COMMIT
+  END TRY
+  BEGIN CATCH
+    print Error_message() --only for debug purpesoue
+    RAISERROR('something want wrong????' , 16,1);
+    ROLLBACK TRANSACTION
+  END CATCH
+
+
+
+
+
+
+
+
+--EXC 2
+create procedure sp_update_lastname
+@empid int
+,@lastname varchar(15)
+as
+  Update Employees
+  set lastname = @lastname
+  where EmployeeID = @empid 
+
+
+
+
+
+
+
+
+--EXC 3
+create procedure sp_insert_new_employee
+@firstname varchar(15),
+@lastname varchar(15),
+@birthdate date
+AS
+  IF @birthdate >= CAST(getdate() as date)
+    BEGIN
+      RAISERROR('DONT YOU LISTALBET ON ME',16,1)
+      RETURN
+    END
+  ELSE
+  BEGIN
+    BEGIN TRY
+      insert into Employees(FirstName, LastName, BirthDate)
+      Values(@firstname, @lastname, @birthdate)
+    END TRY
+    BEGIN CATCH
+      RAISERROR('something want wrong????' , 16,1);
+      ROLLBACK
+    END CATCH
+  END
+
+
+
+
+
+
+
+
+
+--EXC 4
+create procedure sp_emp_det @empid int
+as
+  select * , (select count(*) as OrderCount
+        from orders o 
+        where o.EmployeeID = e.EmployeeID
+        )
+  from Employees e
+  where EmployeeID = @empid
+
+EXEC sp_emp_det @empid= 7
+
+
+
