@@ -1,0 +1,29 @@
+SELECT
+  Page,
+  -- Unique Pageviews (metric)
+  SUM(unique_pageviews) AS Unique_Pageviews
+FROM (
+  SELECT
+    hits.page.pagePath AS Page,
+    CONCAT(hits.page.pagePath,hits.page.pageTitle) AS page_concat,
+    COUNT(DISTINCT CONCAT(CAST(fullVisitorId AS STRING), CAST(visitStartTime AS STRING))) AS unique_pageviews
+  FROM
+    `bigquery-public-data.google_analytics_sample.ga_sessions_*`,
+    UNNEST(hits) AS hits
+  WHERE
+    _table_suffix BETWEEN '20160801'
+    AND FORMAT_DATE('%Y%m%d',DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+    AND totals.visits = 1
+    AND hits.type = 'PAGE'
+  GROUP BY
+    1,
+    2 )
+GROUP BY
+  1
+ORDER BY
+  2 DESC
+LIMIT
+  10
+  
+  
+  
