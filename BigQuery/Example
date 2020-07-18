@@ -1,0 +1,33 @@
+
+SELECT
+  geoNetwork.continent AS Continent,
+  geoNetwork.subContinent AS Sub_Continent,
+  geoNetwork.country AS Country,
+  geoNetwork.region AS Region,
+  geoNetwork.metro AS Metro,
+  geoNetwork.city AS City,
+  geoNetwork.latitude AS Latitude,
+  geoNetwork.longitude AS Longitude,
+  geoNetwork.networkDomain AS Network_Domain,
+  geoNetwork.networkLocation AS Service_Provider,
+  geoNetwork.cityId AS City_ID
+FROM
+  `bigquery-public-data.google_analytics_sample.ga_sessions_*`
+WHERE
+  _table_suffix BETWEEN '20160801'
+  AND FORMAT_DATE('%Y%m%d',DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY))
+  AND totals.visits = 1
+GROUP BY
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11
+LIMIT
+  10
