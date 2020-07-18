@@ -1,0 +1,104 @@
+--Database Northwind
+
+
+
+
+
+
+
+
+-- UDF EXC 1
+--A function that get an orderid and return the revenue of the orederid
+
+create function dbo.get_orderRev(@orderid int)
+returns decimal(18,4)
+as
+  begin
+    return (select sum(unitprice * quantity * (1- discount)) 
+        from OrderDetails
+        where OrderID = @orderid)
+  end
+
+select orderid, orderdate, dbo.get_orderRev(orderid) as get_orderRev
+
+
+
+
+
+
+
+
+
+
+-- UDF EXC 2
+
+create function dbo.getOrderPerYear(@year int)
+returns table
+as
+  return(
+    select orderid, orderdate 
+    , e.firstname 
+    ,c.companyname 
+    from Orders o 
+      join Employees e on o.EmployeeID= e.EmployeeID
+      join Customers c on o.CustomerID = c.CustomerID
+    WHERE year(orderdate) = @year
+  )
+
+select *
+from dbo.getOrderPerYear(1996);
+
+
+
+
+
+
+
+
+
+-- UDF EXC 3
+create function dbo.getOrderDetails_exp(@orderid int)
+returns table
+return
+(
+  select od.OrderID ,p.ProductName ,od.UnitPrice, od.Quantity , od.Discount 
+  , finalPrice = od.UnitPrice * od.Quantity * (1- od.Discount )
+  from OrderDetails od
+  join Products p on od.ProductID = p.ProductID
+  where od.OrderID = @orderid
+
+)
+
+select orderid, sum(finalPrice) as totalfinalPrice
+from  dbo.getOrderDetails_exp(10248)
+group by orderid
+
+
+
+
+
+
+
+
+
+-- UDF EXC 4
+create function dbo.CustomeryearlyOrderTotal(@CustomerID varchar(10))
+returns table
+return
+(
+  select c.CustomerID,c.CompanyName,year(orderdate) as OrderYear
+  ,count(orderid) as OrdersCount
+  ,RunningCount = (select count(orderid) from Orders o2
+             where year(o.orderdate)>= year(o2.orderdate)
+             and o2.CustomerID = c.CustomerID
+          )
+  from Customers c  
+  left join orders o on c.CustomerID = o.CustomerID
+  --where c.CustomerID = @CustomerID
+  group by c.CustomerID,c.CompanyName,year(orderdate)
+  --order by 1, 3
+)
+
+
+
+
